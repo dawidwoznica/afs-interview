@@ -1,4 +1,7 @@
-﻿namespace AFSInterview
+﻿using System;
+using UnityEngine.Serialization;
+
+namespace AFSInterview
 {
     using System.Collections.Generic;
     using TMPro;
@@ -14,18 +17,34 @@
         [SerializeField] private Vector2 boundsMin;
         [SerializeField] private Vector2 boundsMax;
         [SerializeField] private float enemySpawnRate;
+        [SerializeField] private LayerMask towerSpawnLayer;
 
         [Header("UI")] 
-        [SerializeField] private GameObject enemiesCountText;
-        [SerializeField] private GameObject scoreText;
+        [SerializeField] private TextMeshProUGUI enemiesCountText;
+        [SerializeField] private TextMeshProUGUI scoreText;
         
         private List<Enemy> enemies;
         private float enemySpawnTimer;
         private int score;
+        private Camera mainCamera;
+        private Action onScoreChange;
+        private Action onEnemiesCountChange;
+        
+        private const float MaxRaycastDistance = 35f;
 
+        
         private void Awake()
         {
             enemies = new List<Enemy>();
+            mainCamera = Camera.main;
+        }
+
+        private void Start()
+        {
+            UpdateScore();
+            
+            onScoreChange += UpdateScore;
+            onEnemiesCountChange += UpdateEnemiesCount;
         }
 
         private void Update()
@@ -40,19 +59,11 @@
 
             if (Input.GetMouseButtonDown(0))
             {
-                var ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-                if (Physics.Raycast(ray, out var hit, LayerMask.GetMask("Ground")))
+                if (TryObtainSpawnPosition(out var spawnPosition))
                 {
-                    var spawnPosition = hit.point;
-                    spawnPosition.y = towerPrefab.transform.position.y;
-
                     SpawnTower(spawnPosition);
                 }
             }
-
-            scoreText.GetComponent<TextMeshProUGUI>().text = "Score: " + score;
-            enemiesCountText.GetComponent<TextMeshProUGUI>().text = "Enemies: " + enemies.Count;
         }
 
         private void SpawnEnemy()
@@ -64,18 +75,49 @@
             enemy.Initialize(boundsMin, boundsMax);
 
             enemies.Add(enemy);
+            
+            onEnemiesCountChange?.Invoke();
         }
 
         private void Enemy_OnEnemyDied(Enemy enemy)
         {
             enemies.Remove(enemy);
             score++;
+            
+            onScoreChange?.Invoke();
+            onEnemiesCountChange?.Invoke();
+        }
+
+        private bool TryObtainSpawnPosition(out Vector3 spawnPosition)
+        {
+            var ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+
+            if (Physics.Raycast(ray, out var hit, MaxRaycastDistance, towerSpawnLayer.value))
+            {
+                spawnPosition = hit.point;
+                spawnPosition.y = towerPrefab.transform.position.y;
+                return true;
+            }
+            
+            spawnPosition = Vector3.zero;
+
+            return false;
         }
 
         private void SpawnTower(Vector3 position)
         {
             var tower = Instantiate(towerPrefab, position, Quaternion.identity).GetComponent<SimpleTower>();
             tower.Initialize(enemies);
+        }
+        
+        private void UpdateScore()
+        {
+            scoreText.text = $"Score: {score}";
+        }
+
+        private void UpdateEnemiesCount()
+        {
+            enemiesCountText.text = $"Enemies: {enemies.Count}";
         }
     }
 }

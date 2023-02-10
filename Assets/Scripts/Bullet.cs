@@ -7,7 +7,8 @@
         [SerializeField] private float speed;
 
         private GameObject targetObject;
-
+        private bool isObsolete;
+        
         public void Initialize(GameObject target)
         {
             targetObject = target;
@@ -15,14 +16,24 @@
 
         private void Update()
         {
-            var direction = (targetObject.transform.position - transform.position).normalized;
-
-            transform.position += direction * speed * Time.deltaTime;
-
-            if ((transform.position - targetObject.transform.position).magnitude <= 0.2f)
+            if (targetObject)
             {
-                Destroy(gameObject);
-                Destroy(targetObject);
+                var direction = (targetObject.transform.position - transform.position).normalized;
+
+                transform.position += direction * (speed * Time.deltaTime);
+
+                if ((transform.position - targetObject.transform.position).magnitude <= 0.2f)
+                {
+                    Destroy(gameObject);
+                    Destroy(targetObject);
+                }
+            }
+            else
+            {
+                if (!isObsolete)
+                    Destroy(gameObject);
+
+                isObsolete = true;
             }
         }
     }

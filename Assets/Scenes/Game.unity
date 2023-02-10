@@ -157,8 +157,11 @@ MonoBehaviour:
   boundsMin: {x: -12, y: -8}
   boundsMax: {x: 12, y: 13}
   enemySpawnRate: 1
-  enemiesCountText: {fileID: 1950592537}
-  scoreText: {fileID: 1448683482}
+  towerSpawnLayer:
+    serializedVersion: 2
+    m_Bits: 256
+  enemiesCountText: {fileID: 1950592539}
+  scoreText: {fileID: 1448683484}
 --- !u!4 &536068723
 Transform:
   m_ObjectHideFlags: 0

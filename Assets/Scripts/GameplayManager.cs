@@ -1,5 +1,4 @@
 ﻿using System;
-using UnityEngine.Serialization;
 
 namespace AFSInterview
 {
@@ -11,7 +10,8 @@ namespace AFSInterview
     {
         [Header("Prefabs")] 
         [SerializeField] private GameObject enemyPrefab;
-        [SerializeField] private GameObject towerPrefab;
+        [SerializeField] private GameObject simpleTowerPrefab;
+        [SerializeField] private GameObject burstTowerPrefab;
 
         [Header("Settings")] 
         [SerializeField] private Vector2 boundsMin;
@@ -60,9 +60,13 @@ namespace AFSInterview
             if (Input.GetMouseButtonDown(0))
             {
                 if (TryObtainSpawnPosition(out var spawnPosition))
-                {
-                    SpawnTower(spawnPosition);
-                }
+                    SpawnTower(spawnPosition, simpleTowerPrefab);
+            }
+            
+            if (Input.GetMouseButtonDown(1))
+            {
+                if (TryObtainSpawnPosition(out var spawnPosition))
+                    SpawnTower(spawnPosition, burstTowerPrefab);
             }
         }
 
@@ -95,7 +99,7 @@ namespace AFSInterview
             if (Physics.Raycast(ray, out var hit, MaxRaycastDistance, towerSpawnLayer.value))
             {
                 spawnPosition = hit.point;
-                spawnPosition.y = towerPrefab.transform.position.y;
+                spawnPosition.y = simpleTowerPrefab.transform.position.y;
                 return true;
             }
             
@@ -104,9 +108,9 @@ namespace AFSInterview
             return false;
         }
 
-        private void SpawnTower(Vector3 position)
+        private void SpawnTower(Vector3 position, GameObject towerPrefab)
         {
-            var tower = Instantiate(towerPrefab, position, Quaternion.identity).GetComponent<SimpleTower>();
+            var tower = Instantiate(towerPrefab, position, Quaternion.identity).GetComponent<Tower>();
             tower.Initialize(enemies);
         }
         

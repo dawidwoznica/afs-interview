@@ -10,8 +10,8 @@ namespace AFSInterview
     {
         [Header("Prefabs")] 
         [SerializeField] private GameObject enemyPrefab;
-        [SerializeField] private GameObject simpleTowerPrefab;
-        [SerializeField] private GameObject burstTowerPrefab;
+        [SerializeField] private Tower simpleTowerPrefab;
+        [SerializeField] private Tower burstTowerPrefab;
 
         [Header("Settings")] 
         [SerializeField] private Vector2 boundsMin;
@@ -27,8 +27,6 @@ namespace AFSInterview
         private float enemySpawnTimer;
         private int score;
         private Camera mainCamera;
-        private Action onScoreChange;
-        private Action onEnemiesCountChange;
         
         private const float MaxRaycastDistance = 35f;
 
@@ -42,9 +40,6 @@ namespace AFSInterview
         private void Start()
         {
             UpdateScore();
-            
-            onScoreChange += UpdateScore;
-            onEnemiesCountChange += UpdateEnemiesCount;
         }
 
         private void Update()
@@ -79,17 +74,17 @@ namespace AFSInterview
             enemy.Initialize(boundsMin, boundsMax);
 
             enemies.Add(enemy);
-            
-            onEnemiesCountChange?.Invoke();
+
+            UpdateEnemiesCount();
         }
 
         private void Enemy_OnEnemyDied(Enemy enemy)
         {
             enemies.Remove(enemy);
             score++;
-            
-            onScoreChange?.Invoke();
-            onEnemiesCountChange?.Invoke();
+
+            UpdateScore();
+            UpdateEnemiesCount();
         }
 
         private bool TryObtainSpawnPosition(out Vector3 spawnPosition)
@@ -108,9 +103,9 @@ namespace AFSInterview
             return false;
         }
 
-        private void SpawnTower(Vector3 position, GameObject towerPrefab)
+        private void SpawnTower(Vector3 position, Tower towerPrefab)
         {
-            var tower = Instantiate(towerPrefab, position, Quaternion.identity).GetComponent<Tower>();
+            var tower = Instantiate(towerPrefab, position, Quaternion.identity);
             tower.Initialize(enemies);
         }
         

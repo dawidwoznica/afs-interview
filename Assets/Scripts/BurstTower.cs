@@ -9,19 +9,18 @@ namespace AFSInterview
         [SerializeField] private float intervalBetweenShots;
         [SerializeField] private int bulletsAmount;
         [SerializeField] private int initialAngle;
-
+        
+        private BulletPool<CurveBullet> bulletPool;
         private WaitForSeconds waitBetweenShots;
         private Vector3 previousEnemyPosition;
         private Coroutine fireControl;
-        private List<GameObject> pooledBullets;
 
         
         public override void Initialize(IReadOnlyList<Enemy> enemies)
         {
             base.Initialize(enemies);
-
+            bulletPool = new BulletPool<CurveBullet>(bulletsAmount, bulletPrefab);
             waitBetweenShots = new WaitForSeconds(intervalBetweenShots);
-            PreparePool();
         }
 
         protected override void Update()
@@ -55,7 +54,7 @@ namespace AFSInterview
 
                 var predictedPosition = PredictPosition(TargetEnemy.transform.position);
 
-                var bullet = GetBullet().GetComponent<CurveBullet>();
+                var bullet = bulletPool.GetBullet();
                 bullet.transform.position = bulletSpawnPoint.position;
                 bullet.gameObject.SetActive(true);
                 bullet.OnTargetReached += OnBulletReachedTarget;
@@ -109,35 +108,6 @@ namespace AFSInterview
             
             StopCoroutine(fireControl);
             fireControl = null;
-        }
-        
-        private void PreparePool()
-        {
-            pooledBullets = new List<GameObject>();
-            
-            for (var i = 0; i < bulletsAmount; i++)
-            {
-                CreateNewBullet();
-            }
-        }
-
-        private GameObject CreateNewBullet()
-        {
-            var bullet = Instantiate(bulletPrefab);
-            bullet.SetActive(false);
-            pooledBullets.Add(bullet);
-            return bullet;
-        }
-
-        private GameObject GetBullet()
-        {
-            foreach (var pooledObject in pooledBullets)
-            {
-                if(!pooledObject.activeInHierarchy)
-                    return pooledObject;
-            }
-
-            return CreateNewBullet();
         }
     }
 }
